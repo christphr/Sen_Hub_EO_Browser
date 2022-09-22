@@ -1,0 +1,39 @@
+//VERSION=3
+const colorRamp = [
+    [-0.75,0xff0000],
+    [-0.25,0xfff400],
+    [0.25,0x0000ff],
+    [0.75,0x000000]
+    ]
+
+let viz = new ColorRampVisualizer(colorRamp);
+
+function setup() {
+  return {
+    input: ["B03","B08", "dataMask"],
+    output: [
+      { id:"default", bands: 4 },
+      { id: "index", bands: 1, sampleType: 'FLOAT32' }
+    ]
+  };
+}
+
+function evaluatePixel(samples) {
+  let index = (samples.B03-samples.B08)/(samples.B03+samples.B08);
+  const minIndex = -0.75;
+  const maxIndex = 0.75;
+  let visVal = null;
+
+  if(index > maxIndex || index < minIndex) {
+    visVal = [0, 0, 0, 0];
+  }
+  else {
+    visVal = [...viz.process( index),samples.dataMask];
+  }
+
+  // The library for tiffs only works well if there is one channel returned.
+  // So here we encode "no data" as NaN and ignore NaNs on the frontend.  
+  const indexVal = samples.dataMask === 1 ? index : NaN;
+
+  return { default: visVal, index: [indexVal] };
+}
