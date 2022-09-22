@@ -1,0 +1,34 @@
+//VERSION=3
+//Sentinel-Hub S2 NIR Colour Ramp
+//by Chris O'Donovan from Sen Hub Generic Code
+const colorRamp = [
+    [0.3,0xff0000],
+    [0.2,0xfff400],
+    [0.1,0x0000ff],
+    [0,0x000000]
+    ]
+
+let viz = new ColorRampVisualizer(colorRamp);
+
+function setup() {
+  return {
+    input: ["B08", "dataMask"],
+    output: { bands: 4 }
+  };
+}
+
+function evaluatePixel(samples) {
+  let index = samples.B08;
+  const minIndex = 0;
+  const maxIndex = 1;
+  let visVal = null;
+
+  visVal = [...viz.process( index),samples.dataMask];
+  
+
+  // The library for tiffs only works well if there is one channel returned.
+  // So here we encode "no data" as NaN and ignore NaNs on the frontend.  
+  const indexVal = samples.dataMask === 1 ? index : NaN;
+
+  return { default: visVal, index: [indexVal] };
+}
